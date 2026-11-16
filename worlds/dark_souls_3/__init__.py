@@ -301,7 +301,7 @@ class DarkSouls3World(World):
             )
             create_connection("Dreg Heap", "Ringed City")
 
-            if self.options.goal != {"Kiln of the First Flame Boss"}:
+            if {*self.options.goal} != {"Kiln of the First Flame Boss"}:
                 create_connection("Kiln of the First Flame", "Dreg Heap", explicit_from=True)
 
     # For each region, add the associated locations retrieved from the corresponding location_table
@@ -527,7 +527,7 @@ class DarkSouls3World(World):
         # If the Coiled Sword is vanilla, it is early enough and doesn't need to be placed.
         # Don't place this in the multiworld because it's necessary almost immediately, and don't
         # mark it as a blocker for HWL because having a miniscule Sphere 1 screws with progression balancing.
-        if self._location_status("CA: Coiled Sword - boss drop").is_randomized:
+        if (self._is_location_available("CA: Coiled Sword - boss drop") and self.options.local_coiled_sword):
             self._fill_local_item("Coiled Sword", ["Cemetery of Ash", "Firelink Shrine"])
 
         # If the HWL Raw Gem is vanilla, it is early enough and doesn't need to be removed. If
@@ -610,7 +610,9 @@ class DarkSouls3World(World):
         self._add_crow_rules()
         self._add_allow_useful_location_rules()
         self._add_early_item_rules(randomized_items)
+        self._heal_upgrades()
 
+        self._add_entrance_rule("High Wall of Lothric", "Coiled Sword")
         self._add_entrance_rule("Firelink Shrine Bell Tower", "Tower Key")
         self._add_entrance_rule("Undead Settlement", lambda state: (
             state.has("Small Lothric Banner", self.player)
@@ -654,6 +656,7 @@ class DarkSouls3World(World):
             and state.has("Cinders of a Lord - Aldrich", self.player)
             and state.has("Cinders of a Lord - Lothric Prince", self.player)
             and state.has("Transposing Kiln", self.player)
+            and state.has("Coiled Sword", self.player)
         ))
 
         if self.options.late_basin_of_vows:
@@ -663,9 +666,11 @@ class DarkSouls3World(World):
                 and (
                     "Transposing Kiln" not in randomized_items
                     or state.has("Transposing Kiln", self.player)
+                    or self.options.smooth_logic == False
                 ) and (
                     "Pyromancy Flame" not in randomized_items
                     or state.has("Pyromancy Flame", self.player)
+                    or self.options.smooth_logic == False
                 )
                 # This isn't really necessary, but it ensures that the game logic knows players will
                 # want to do Lothric Castle after at least being _able_ to access Catacombs. This is
@@ -713,13 +718,7 @@ class DarkSouls3World(World):
             self._add_entrance_rule("Painted World of Ariandel (After Contraption)", "Contraption Key")
             self._add_entrance_rule(
                 "Dreg Heap",
-                lambda state: (
-                    self._can_get(state, "PW2: Soul of Sister Friede")
-                    or (
-                        self.options.goal != {"Kiln of the First Flame Boss"}
-                        and self._can_go_to(state, "Kiln of the First Flame")
-                    )
-                ),
+                lambda state: self._can_get(state, "PW2: Soul of Sister Friede"),
                 from_region="Painted World of Ariandel (After Contraption)",
             )
             self._add_entrance_rule("Ringed City", lambda state: (
@@ -727,15 +726,33 @@ class DarkSouls3World(World):
                 and self._can_get(state, "DH: Soul of the Demon Prince")
             ))
 
+            is_goal_not_only_kiln_boss = {*self.options.goal} != {"Kiln of the First Flame Boss"}
+
             if self.options.late_dlc:
                 self._add_entrance_rule(
                     "Painted World of Ariandel (Before Contraption)",
                     lambda state: state.has("Small Doll", self.player) and self._has_any_scroll(state))
 
+                if is_goal_not_only_kiln_boss:
+                    self._add_entrance_rule(
+                        "Dreg Heap",
+                        lambda state: state.has("Small Doll", self.player) and self._has_any_scroll(state),
+                        from_region="Kiln of the First Flame",
+                    )
+
             if self.options.late_dlc > 1:  # After Basin
                 self._add_entrance_rule("Painted World of Ariandel (Before Contraption)", "Basin of Vows")
 
+                if is_goal_not_only_kiln_boss:
+                    self._add_entrance_rule("Dreg Heap", "Basin of Vows",
+                        from_region="Kiln of the First Flame")
+
         # Define the access rules to some specific locations
+        self._add_location_rule([
+            "FS: Cracked Red Eye Orb - Leonhard"
+        ], lambda state: (
+            self._can_get(state, "HWL: Soul of Boreal Valley Vordt")
+        ))
         self._add_location_rule("HWL: Red Eye Orb - wall tower, miniboss", "Lift Chamber Key")
         self._add_location_rule("ID: Bellowing Dragoncrest Ring - drop from B1 towards pit",
                                 "Jailbreaker's Key")
@@ -747,8 +764,10 @@ class DarkSouls3World(World):
             "UG: Wolf Knight Gauntlets - shop after killing FK boss",
             "UG: Wolf Knight Leggings - shop after killing FK boss"
         ], lambda state: self._can_get(state, "FK: Cinders of a Lord - Abyss Watcher"))
-        self._add_location_rule(
+        self._add_location_rule([
             "ID: Prisoner Chief's Ashes - B2 near, locked cell by stairs",
+            "ID: Rusted Coin - after bonfire, first cell on left"
+            ],
             "Jailer's Key Ring"
         )
         self._add_entrance_rule("Karla's Shop", "Jailer's Key Ring")
@@ -768,9 +787,11 @@ class DarkSouls3World(World):
                 and (
                     "Transposing Kiln" not in randomized_items
                     or state.has("Transposing Kiln", self.player)
+                    or self.options.smooth_logic == False
                 ) and (
                     "Pyromancy Flame" not in randomized_items
                     or state.has("Pyromancy Flame", self.player)
+                    or self.options.smooth_logic == False
                 )
                 # This isn't really necessary, but it ensures that the game logic knows players will
                 # want to do Lothric Castle after at least being _able_ to access Catacombs. This is
@@ -795,7 +816,11 @@ class DarkSouls3World(World):
 
         self._add_location_rule([
             "FS: Morne's Great Hammer - Eygon",
-            "FS: Moaning Shield - Eygon"
+            "FS: Moaning Shield - Eygon",
+            "FS: Morne's Helm - shop after killing Eygon or LC boss",
+            "FS: Morne's Armor - shop after killing Eygon or LC boss",
+            "FS: Morne's Gauntlets - shop after killing Eygon or LC boss",
+            "FS: Morne's Leggings - shop after killing Eygon or LC boss"
         ], lambda state: (
             self._can_get(state, "LC: Soul of Dragonslayer Armour") and
             self._can_get(state, "FK: Soul of the Blood of the Wolf")
@@ -1427,12 +1452,12 @@ class DarkSouls3World(World):
     def _add_early_item_rules(self, randomized_items: Set[str]) -> None:
         """Adds rules to make sure specific items are available early."""
 
-        if "Pyromancy Flame" in randomized_items:
+        if (("Pyromancy Flame" in randomized_items) and self.options.smooth_logic):
             # Make this available early because so many items are useless without it.
             self._add_entrance_rule("Road of Sacrifices", "Pyromancy Flame")
             self._add_entrance_rule("Consumed King's Garden", "Pyromancy Flame")
             self._add_entrance_rule("Grand Archives", "Pyromancy Flame")
-        if "Transposing Kiln" in randomized_items:
+        if (("Transposing Kiln" in randomized_items) and self.options.smooth_logic):
             # Make this available early so players can make use of their boss souls.
             self._add_entrance_rule("Road of Sacrifices", "Transposing Kiln")
             self._add_entrance_rule("Consumed King's Garden", "Transposing Kiln")
@@ -1456,6 +1481,64 @@ class DarkSouls3World(World):
             or state.has("Logan's Scroll", self.player)
             or state.has("Crystal Scroll", self.player)
         )
+
+    def _heal_upgrades(self) -> None:
+            """Returns whether the player has the required heal upgrades."""
+            def scale(amount):
+                result = (amount * self.options.health_logic + 2) // 4
+                return result
+            if(self.options.health_logic):
+                self._add_entrance_rule("Undead Settlement", lambda state: (
+                    state.has("Estus Shard", self.player, scale(1)) and state.has("Undead Bone Shard", self.player, scale(0))
+                ))
+                self._add_entrance_rule("Road of Sacrifices", lambda state: (
+                    state.has("Estus Shard", self.player, scale(2)) and state.has("Undead Bone Shard", self.player, scale(1))
+                ))
+                self._add_entrance_rule("Farron Keep", lambda state: (
+                    state.has("Estus Shard", self.player, scale(3)) and state.has("Undead Bone Shard", self.player, scale(1))
+                ))
+                self._add_entrance_rule("Cathedral of the Deep", lambda state: (
+                    state.has("Estus Shard", self.player, scale(3)) and state.has("Undead Bone Shard", self.player, scale(1))
+                ))
+                self._add_entrance_rule("Catacombs of Carthus", lambda state: (
+                    state.has("Estus Shard", self.player, scale(4)) and state.has("Undead Bone Shard", self.player, scale(3))
+                ))
+                self._add_entrance_rule("Smouldering Lake", lambda state: (
+                    state.has("Estus Shard", self.player, scale(5)) and state.has("Undead Bone Shard", self.player, scale(4))
+                ))
+                self._add_entrance_rule("Irithyll of the Boreal Valley", lambda state: (
+                    state.has("Estus Shard", self.player, scale(6)) and state.has("Undead Bone Shard", self.player, scale(6))
+                ))
+                self._add_entrance_rule("Irithyll Dungeon", lambda state: (
+                    state.has("Estus Shard", self.player, scale(6)) and state.has("Undead Bone Shard", self.player, scale(7))
+                ))
+                self._add_entrance_rule("Anor Londo", lambda state: (
+                    state.has("Estus Shard", self.player, scale(6)) and state.has("Undead Bone Shard", self.player, scale(7))
+                ))
+                self._add_entrance_rule("Profaned Capital", lambda state: (
+                    state.has("Estus Shard", self.player, scale(7)) and state.has("Undead Bone Shard", self.player, scale(6))
+                ))
+                self._add_location_rule("HWL: Soul of the Dancer", lambda state: (
+                    state.has("Estus Shard", self.player, scale(8)) and state.has("Undead Bone Shard", self.player, scale(8))
+                ))
+                self._add_entrance_rule("Consumed King's Garden", lambda state: (
+                    state.has("Estus Shard", self.player, scale(8)) and state.has("Undead Bone Shard", self.player, scale(8))
+                ))
+                self._add_entrance_rule("Untended Graves", lambda state: (
+                    state.has("Estus Shard", self.player, scale(9)) and state.has("Undead Bone Shard", self.player, scale(8))
+                ))
+                self._add_entrance_rule("Archdragon Peak (Through Fort)", lambda state: (
+                    state.has("Estus Shard", self.player, scale(9)) and state.has("Undead Bone Shard", self.player, scale(8))
+                ))
+                self._add_entrance_rule("Grand Archives", lambda state: (
+                    state.has("Estus Shard", self.player, scale(9)) and state.has("Undead Bone Shard", self.player, scale(9))
+                ))
+                self._add_entrance_rule("Kiln of the First Flame", lambda state: (
+                    state.has("Estus Shard", self.player, scale(11)) and state.has("Undead Bone Shard", self.player, scale(10))
+                ))
+                self._add_entrance_rule("Painted World of Ariandel (Before Contraption)", lambda state: (
+                    state.has("Estus Shard", self.player, scale(11)) and state.has("Undead Bone Shard", self.player, scale(10))
+                ))
 
     def _add_location_rule(self, location: Union[str, List[str]], rule: Union[CollectionRule, str]) -> None:
         """Sets a rule for the given location if that location is randomized.
@@ -1530,16 +1613,30 @@ class DarkSouls3World(World):
                 else _LocationStatus.UNRANDOMIZED_UNMISSABLE
             )
 
-    def _goal_bosses(self) -> [DS3BossInfo]:
+    def _goal_bosses(self) -> {DS3BossInfo}:
         """Returns all the bosses that are goals for this run."""
-        result = []
-        for name in self.options.goal:
+        result = set()
+        goal = {*self.options.goal}
+
+        if "All Bosses" in goal:
+            goal.remove("All Bosses")
+            result.update(boss for boss in all_bosses if boss.flag)
+
+        if "Base Game Bosses" in goal:
+            goal.remove("Base Game Bosses")
+            result.update(boss for boss in all_bosses if boss.flag and not boss.dlc)
+
+        if "DLC Bosses" in goal:
+            goal.remove("DLC Bosses")
+            result.update(boss for boss in all_bosses if boss.flag and boss.dlc)
+
+        for name in goal:
             assert name.endswith(" Boss")
             region = name[:-len(" Boss")]
             boss = next(boss for boss in reversed(all_bosses) if boss.region == region)
             assert boss
             assert boss.flag
-            result.append(boss)
+            result.add(boss)
         return result
 
     def write_spoiler(self, spoiler_handle: TextIO) -> None:
@@ -1762,6 +1859,11 @@ class DarkSouls3World(World):
                 "impatient_mimics": self.options.impatient_mimics.value,
                 "anri_gender": self.options.anri_gender.value,
             },
+            # Options that are needed by the PopTracker and not by the Archipelago client.
+            "poptracker": {
+                "late_basin_of_vows": self.options.late_basin_of_vows.value,
+                "late_dlc": self.options.late_dlc.value,
+            },
             "seed": self.multiworld.seed_name,  # to verify the server's multiworld
             "slot": self.multiworld.player_name[self.player],  # to connect to server
             "goal": [boss.flag for boss in self._goal_bosses()],
@@ -1780,7 +1882,7 @@ class DarkSouls3World(World):
             # This is checked by the static randomizer, which will surface an
             # error to the user if its version doesn't fall into the allowed
             # range.
-            "versions": ">=4.0.0-alpha.9 <5.0.0",
+            "versions": ">=4.0.0 <5.0.0",
         }
 
         return slot_data

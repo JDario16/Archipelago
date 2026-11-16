@@ -3,7 +3,7 @@ import json
 from typing import Any, Dict
 
 from Options import Choice, DefaultOnToggle, ExcludeLocations, NamedRange, OptionDict, \
-    OptionGroup, OptionSet, PerGameCommonOptions, Range, Removed, Toggle, OptionError
+    OptionGroup, OptionSet, PerGameCommonOptions, Range, Removed, Toggle, OptionError, LocalItems
 
 from .Bosses import all_bosses
 
@@ -26,12 +26,25 @@ class GoalOption(OptionSet):
       vanilla, "Ringed City Hidden" is Darkeater Midir in vanilla, and "Ringed
       City End" is Slave Knight Gael in vanilla.
 
-    If multiple bosses are selected, all of them must be defeated in order to
-    achieve your goal. By default, only "Kiln of the First Flame Boss" is
-    selected.
+    There are also several group names that can be used:
+
+    - **All Bosses:** All bosses in the base game and DLC must be beaten to win
+        the game.
+    - **Base Game Bosses:** All bosses in the base game must be beaten, but not
+        any of the DLC bosses.
+    - **DLC Bosses:** All bosses in the DLC must be beaten, but not any of the
+        base game bosses.
+
+    If multiple goals are selected, all of them must be achieved in order to win
+    your game. By default, only "Kiln of the First Flame Boss" is selected.
     """
     display_name = "Goal"
-    valid_keys = {boss.region + " Boss" for boss in all_bosses if boss.flag}
+    valid_keys = {
+        *(boss.region + " Boss" for boss in all_bosses if boss.flag),
+        "All Bosses",
+        "Base Game Bosses",
+        "DLC Bosses",
+    }
     default = frozenset({"Kiln of the First Flame Boss"})
 
     def verify_keys(self) -> None:
@@ -47,6 +60,29 @@ class EarlySmallLothricBanner(Choice):
     option_early_local = 2
     default = option_off
 
+class EarlyCoiledSword(Toggle):
+    """Force Coiled Sword into an early sphere in your world."""
+    display_name = "Early Coiled Sword"
+    default = True
+
+class HealthUpgradesLogic(Choice):
+    """Guarantee that you need a certain amount of health upgrades before an area becomes in logic.
+    
+    - **Off:** This would disable all the logic behind health upgrades, so it would be possible that you are 
+    required to beat Ringed City bosses without any health upgrade.
+    - **Very easy:** The areas require an amount of healing upgrades similar to a vanilla route. And the
+    dlcs would require all of them.
+    - **Easy:** The amount is reduced to 75% compared to Very Easy
+    - **Normal:** The amount is reduced to 50% compared to Very Easy
+    - **Hard:** The amount is reduced to 25% compared to Very Easy
+    """
+    display_name = "Health Upgrades Logic"
+    option_off = 0
+    option_very_easy = 4
+    option_easy = 3
+    option_normal = 2
+    option_hard = 1
+    default = option_very_easy
 
 class LateBasinOfVowsOption(Choice):
     """Guarantee that you don't need to enter Lothric Castle until later in the run.
@@ -263,6 +299,15 @@ class MaxLevelsIn10WeaponPoolOption(Range):
 
 ## Item Smoothing
 
+class SmoothLogicOption(Toggle):
+    """Include Pyromancy Flame and Transposing Kiln in the logic.
+
+    With this on, these 2 items become a requirement to reach areas like Road of Sacrifices,
+    Consumed King's Gardens and Grand Archives 
+    """
+    display_name = "Enable Smooth Logic"
+    default = False
+
 class SmoothSoulItemsOption(DefaultOnToggle):
     """Distribute soul items in a similar order as the base game.
 
@@ -400,6 +445,9 @@ class RandomEnemyPresetOption(OptionDict):
 
 
 ## Item & Location
+class DS3LocalItems(LocalItems):
+    """Force these items to be native to their world"""
+    default = frozenset({"Coiled Sword"})
 
 class DS3ExcludeLocations(ExcludeLocations):
     """Prevent these locations from having an important item."""
@@ -453,6 +501,8 @@ class DarkSouls3Options(PerGameCommonOptions):
     # Game Options
     goal: GoalOption
     early_banner: EarlySmallLothricBanner
+    local_coiled_sword: EarlyCoiledSword
+    health_logic: HealthUpgradesLogic
     late_basin_of_vows: LateBasinOfVowsOption
     late_dlc: LateDLCOption
     death_link: DeathLink
@@ -482,6 +532,7 @@ class DarkSouls3Options(PerGameCommonOptions):
     max_levels_in_10: MaxLevelsIn10WeaponPoolOption
 
     # Item Smoothing
+    smooth_logic: SmoothLogicOption
     smooth_soul_items: SmoothSoulItemsOption
     smooth_upgrade_items: SmoothUpgradeItemsOption
     smooth_upgraded_weapons: SmoothUpgradedWeaponsOption
@@ -498,6 +549,7 @@ class DarkSouls3Options(PerGameCommonOptions):
     random_enemy_preset: RandomEnemyPresetOption
 
     # Item & Location
+    local_items: DS3LocalItems
     exclude_locations: DS3ExcludeLocations
     excluded_location_behavior: ExcludedLocationBehaviorOption
     missable_location_behavior: MissableLocationBehaviorOption
@@ -539,6 +591,7 @@ option_groups = [
         MaxLevelsIn10WeaponPoolOption,
     ]),
     OptionGroup("Item Smoothing", [
+        SmoothLogicOption,
         SmoothSoulItemsOption,
         SmoothUpgradeItemsOption,
         SmoothUpgradedWeaponsOption,
@@ -555,6 +608,7 @@ option_groups = [
         RandomEnemyPresetOption,
     ]),
     OptionGroup("Item & Location Options", [
+        DS3LocalItems,
         DS3ExcludeLocations,
         ExcludedLocationBehaviorOption,
         MissableLocationBehaviorOption,

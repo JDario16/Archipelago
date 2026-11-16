@@ -12,7 +12,7 @@
 - [Dark Souls III](https://store.steampowered.com/app/374320/DARK_SOULS_III/)
 - [Dark Souls III AP Client]
 
-[Dark Souls III AP Client]: https://github.com/fswap/ds3-archipelago/releases/latest
+[Dark Souls III AP Client]: https://github.com/fswap/from-software-archipelago-clients/releases?q=Dark+Souls+III&expanded=true
 
 ## Optional Software
 
@@ -20,9 +20,10 @@
 
 ## Setting Up
 
-First, download the client from the link above (`DS3.Archipelago.*.zip`). It doesn't need to go
-into any particular directory; it'll automatically locate _Dark Souls III_ in your Steam
-installation folder.
+First, download the client from the link above (`DS3.Archipelago.*.zip`). It doesn't need to go into
+any particular directory; it'll automatically locate _Dark Souls III_ in your Steam installation
+folder. (Avoid saving it to your desktop on Windows because Microsoft OneDrive can make it
+malfunction.
 
 Version 4.0.0 of the randomizer _only_ supports the latest version of _Dark Souls III_, 1.15.2. This
 is the latest version, so you don't need to do any downpatching!
@@ -96,7 +97,7 @@ spawning in places they can't be killed, and, in a few rare cases, enemies spawn
 crash the game when they load. These bugs should be [reported upstream], but unfortunately the
 Archipelago devs can't help much with them.
 
-[thefifthmatt's DS3 enemy randomizer]: https://www.nexusmods.com/darksouls3/mods/484
+[thefifthmatt's DS3 enemy randomizer]: https://www.nexusmods.com/darksouls3/mods/361
 [reported upstream]: https://github.com/thefifthmatt/SoulsRandomizers/issues
 
 If you're running into an enemy randomizer bug that's severely affecting your run, you can re-run
@@ -124,16 +125,21 @@ find `DarkSoulsIII.exe` or to launch it properly. If this is happening to you, m
 
 * Steam is not running in administrator mode. To fix this, right-click `steam.exe` (by default this
   is in `C:\Program Files\Steam`), select "Properties", open the "Compatiblity" tab, and uncheck
-  "Run this program as an administrator".
+  "Run this program as an administrator". Try opening `steam.exe` directly from this folder if you were
+  using other means such as the taskbar.
 
 * There is no `dinput8.dll` file in your DS3 game directory. This is the old way of installing mods,
   and it can interfere with the new ModEngine2 workflow.
+
+* You're not using any other mods for DS3. While it's possible to use the Archipelago mod along with
+  other mods, support isn't guaranteed, and mod conflicts are a likely source of problems when
+  loading the game.
 
 If you've checked all of these, you can also try:
 
 * Running `launch-ds3.bat` as an administrator.
 
-* Reinstalling DS3 or even reinstalling Steam itself.
+* Reinstalling DS3 or even reinstalling Steam itself. When reinstalling DS3, double-check that the DS3 game directory is completely empty or deleted by Steam after uninstalling. If it is not empty the remaining files may be remnants of mods you have installed in the past, which can cause conflicts. You should delete any remaining files in the DS3 game directory before you install the game again to ensure a clean game installation.
 
 * Making sure DS3 is installed on the same drive as Steam and as the randomizer. (A number of users
   are able to run these on different drives, but this has helped some users.)

@@ -2173,13 +2173,13 @@ location_tables: Dict[str, List[DS3LocationData]] = {
         DS3LocationData("LC: Rusted Coin - chapel", "Rusted Coin x2"),
         DS3LocationData("LC: Braille Divine Tome of Lothric - wyvern room",
                         "Braille Divine Tome of Lothric", hidden=True),  # Hidden fall
-        DS3LocationData("LC: Red Tearstone Ring - chapel, drop onto roof", "Red Tearstone Ring"),
+        DS3LocationData("LC: Red Tearstone Ring - chapel, balcony before drop", "Red Tearstone Ring"),
         DS3LocationData("LC: Twinkling Titanite - moat, left side", "Twinkling Titanite x2"),
         DS3LocationData("LC: Large Soul of a Nameless Soldier - plaza left, by pillar",
                         "Large Soul of a Nameless Soldier"),
         DS3LocationData("LC: Titanite Scale - altar", "Titanite Scale x3"),
         DS3LocationData("LC: Titanite Scale - chapel, chest", "Titanite Scale"),
-        DS3LocationData("LC: Hood of Prayer", "Hood of Prayer"),
+        DS3LocationData("LC: Hood of Prayer - ascent, chest at beginning", "Hood of Prayer"),
         DS3LocationData("LC: Robe of Prayer - ascent, chest at beginning", "Robe of Prayer"),
         DS3LocationData("LC: Skirt of Prayer - ascent, chest at beginning", "Skirt of Prayer"),
         DS3LocationData("LC: Spirit Tree Crest Shield - basement, chest",
@@ -2222,7 +2222,7 @@ location_tables: Dict[str, List[DS3LocationData]] = {
         DS3LocationData("FS: Morne's Great Hammer - Eygon", "Morne's Great Hammer", npc=True),
         DS3LocationData("FS: Moaning Shield - Eygon", "Moaning Shield", npc=True),
 
-        # Shrine Handmaid after killing Dragonslayer Armour (or Eygon of Carim)
+        # Shrine Handmaid after killing Dancer of the Boreal Valley
         DS3LocationData("FS: Dancer's Crown - shop after killing LC entry boss", "Dancer's Crown",
                         boss=True, shop=True),
         DS3LocationData("FS: Dancer's Armor - shop after killing LC entry boss", "Dancer's Armor",
@@ -2234,13 +2234,13 @@ location_tables: Dict[str, List[DS3LocationData]] = {
 
         # Shrine Handmaid after killing Dragonslayer Armour (or Eygon of Carim)
         DS3LocationData("FS: Morne's Helm - shop after killing Eygon or LC boss", "Morne's Helm",
-                        boss=True, shop=True, missable=True),
+                        boss=True, shop=True),
         DS3LocationData("FS: Morne's Armor - shop after killing Eygon or LC boss", "Morne's Armor",
-                        boss=True, shop=True, missable=True),
+                        boss=True, shop=True),
         DS3LocationData("FS: Morne's Gauntlets - shop after killing Eygon or LC boss",
-                        "Morne's Gauntlets", boss=True, shop=True, missable=True),
+                        "Morne's Gauntlets", boss=True, shop=True),
         DS3LocationData("FS: Morne's Leggings - shop after killing Eygon or LC boss",
-                        "Morne's Leggings", boss=True, shop=True, missable=True),
+                        "Morne's Leggings", boss=True, shop=True),
     ],
     "Consumed King's Garden": [
         DS3LocationData("CKG: Soul of Consumed Oceiros", "Soul of Consumed Oceiros",
@@ -3301,6 +3301,9 @@ location_name_groups["Archdragon Peak"] = (
     location_name_groups["Archdragon Peak (Through Fort)"]
     .union(location_name_groups["Archdragon Peak (After Fort)"])
 )
+del location_name_groups["Archdragon Peak (Through Fort)"]
+del location_name_groups["Archdragon Peak (After Fort)"]
+
 location_name_groups["Painted World of Ariandel"] = (
     location_name_groups["Painted World of Ariandel (Before Contraption)"]
     .union(location_name_groups["Painted World of Ariandel (After Contraption)"])
